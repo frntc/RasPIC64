@@ -8,7 +8,7 @@ On the hardware side connecting the C64 to the RPi requires level shifting to in
 
 The wiring that works with the example programs in this repository (note: I'd be happy if you experiment with RasPIC64, but PLEASE DO NOT MAKE A PCB YET, this circuitry is very likely to change and I'd like to avoid multiple incompatible PCBs floating around) can be found in RasPIC64_Circuit.jpg.
 
-On the software side, handling the communication is very time critical. The communication needs to happen within a time window of approx. 500 nanoseconds. This includes reading the GPIOs, switching multiplexers and reading again, possibly figuring out which data to put on the bus, doing so – and getting hands off again on time. Many of these steps obviously must not happen too late, but also not too early (e.g. data lines or PLA signals might not be ready). Just sniffing the bus, e.g. getting SID commands and running an emulation is less time critical than reacting, for instance when emulating a CBM80 cartridge. In this case one has to put the next byte on the bus and if too late, the C64 will most likely crash. That is, in addition to careful timing, we also must avoid cache misses on the RPi. 
+On the software side, handling the communication is very time critical. The communication needs to happen within a time window of approx. 500 nanoseconds. This includes reading the GPIOs, switching multiplexers and reading again, possibly figuring out which data to put on the bus, doing so -- and getting hands off again on time. Many of these steps obviously must not happen too late, but also not too early (e.g. data lines or PLA signals might not be ready). Just sniffing the bus, e.g. getting SID commands and running an emulation is less time critical than reacting, for instance when emulating a CBM80 cartridge. In this case one has to put the next byte on the bus and if too late, the C64 will most likely crash. That is, in addition to careful timing, we also must avoid cache misses on the RPi. 
 
 I implemented the communication in a fast interrupt handler (FIQ) which handles GPIO reading, preloading caches if required, and reacts properly. The timing is done using the ARM's instruction counters. I use Circle (https://github.com/rsta2/circle) for bare metal programming the RPi which provides a great basis. Unfortunately other features which require IRQs (e.g. USB) interfere with the FIQ and do not work. Please see the example programs for the specific implementations of the SID and FM emulation, the CBM80 and the memory expansion.
 
@@ -19,9 +19,9 @@ As mentioned above I also wanted to be able to control GAME, EXROM etc. and conn
 
 # Building
 
-Setup your Circle39 and gcc-arm environment, then you can compile RasPIC64 almost like any other example program (the repository contains the build settings for Circle that I use – make sure you use them, otherwise it will probably not work). Use "make –kernel={sid|cart|ram}" to build the different kernels, then put the kernel together with the Raspberry Pi firmware on an SD(HC) card with FAT file system and boot your RPi with it. Although the circuitry has pull-ups/pull-downs to not mess with the bus at boot time, I recommend to boot the RPi first and then turn on the C64.
+Setup your Circle39 and gcc-arm environment, then you can compile RasPIC64 almost like any other example program (the repository contains the build settings for Circle that I use -- make sure you use them, otherwise it will probably not work). Use "make -kernel={sid|cart|ram}" to build the different kernels, then put the kernel together with the Raspberry Pi firmware on an SD(HC) card with FAT file system and boot your RPi with it. Although the circuitry has pull-ups/pull-downs to not mess with the bus at boot time, I recommend to boot the RPi first and then turn on the C64.
 
-The example programs have several configuration options (via #define), please see the source code. They all enable HDMI output of the RPi – the sound emulation will either output sound via PWM (head phone jack) or HDMI (where it also displays some simple oscilloscope views of the sound chips).
+The example programs have several configuration options (via #define), please see the source code. They all enable HDMI output of the RPi -- the sound emulation will either output sound via PWM (head phone jack) or HDMI (where it also displays some simple oscilloscope views of the sound chips).
 
 # Getting it working
 
@@ -30,7 +30,7 @@ The exact timings using the instruction counters depend on whether you use an RP
 
 # Disclaimer
 
-Be careful not to damage your RPi or C64, or anything attached to it. In principle, you can attach the RPi and other cartridges at the same time, as long as they do not conflict (e.g. in IO ranges). But DO NOT connect the latch-outputs for GAME and EXROM when you attach cartridges also controlling these signals (e.g. an EasyFlash 3). Note that I'm not taking any responsibility – if you don't know what you're doing, better don't... use everything at your own risk.
+Be careful not to damage your RPi or C64, or anything attached to it. In principle, you can attach the RPi and other cartridges at the same time, as long as they do not conflict (e.g. in IO ranges). But DO NOT connect the latch-outputs for GAME and EXROM when you attach cartridges also controlling these signals (e.g. an EasyFlash 3). Note that I'm not taking any responsibility -- if you don't know what you're doing, better don't... use everything at your own risk.
 
 # How about...
 
