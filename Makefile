@@ -4,7 +4,7 @@
 
 CIRCLEHOME = ../..
 
-OBJS = lowlevel_arm.o gpio_defs.o latch.o oled.o ./oled/ssd1306xled.o ./oled/ssd1306xled8x16.o ./oled/num2str.o 
+OBJS = lowlevel_arm.o gpio_defs.o latch.o oled.o ./OLED/ssd1306xled.o ./OLED/ssd1306xled8x16.o ./OLED/num2str.o 
 
 ifeq ($(kernel), cart)
 OBJS += kernel_cart.o
