@@ -38,7 +38,7 @@ Be careful not to damage your RPi or C64, or anything attached to it. In princip
 
 ... Raspberry Pi Zero (Pi 1, 2): in the beginning I tested a Pi 2, but it's likely that it is too slow for reliable bidirectional communication. The Pi Zero is really slow and definitely is not capable of it.
 
-... a C128: I didn't try this yet, but in principle it should work.
+... a C128: I did some quick tests and didn't encounter any problems so far.
 
 
 Last but not least I would like to thank a few people:
@@ -49,4 +49,5 @@ The authors of reSID and the OPL emulators (also used in WinVICE), the authors o
 
 
 Trademarks
+
 Raspberry Pi is a trademark of the Raspberry Pi Foundation.
