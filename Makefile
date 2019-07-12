@@ -6,9 +6,6 @@ CIRCLEHOME = ../..
 
 OBJS = lowlevel_arm.o gpio_defs.o latch.o oled.o ./oled/ssd1306xled.o ./oled/ssd1306xled8x16.o ./oled/num2str.o 
 
-#OBJS += kernel_ef.o
-#OBJS += kernel_cart.o
-
 ifeq ($(kernel), cart)
 OBJS += kernel_cart.o
 endif

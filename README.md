@@ -25,7 +25,7 @@ Note, in the current implementations of the Cartridge- and EasyFlash-emulation I
 
 # Building
 
-Setup your Circle39 and gcc-arm environment, then you can compile RasPIC64 almost like any other example program (the repository contains the build settings for Circle that I use -- make sure you use them, otherwise it will probably not work). Use "make -kernel={sid|cart|ram}" to build the different kernels, then put the kernel together with the Raspberry Pi firmware on an SD(HC) card with FAT file system and boot your RPi with it. Although the circuitry has pull-ups/pull-downs to not mess with the bus at boot time, I recommend to boot the RPi first and then turn on the C64.
+Setup your Circle39 and gcc-arm environment, then you can compile RasPIC64 almost like any other example program (the repository contains the build settings for Circle that I use -- make sure you use them, otherwise it will probably not work). Use "make -kernel={sid|cart|ram|ef}" to build the different kernels, then put the kernel together with the Raspberry Pi firmware on an SD(HC) card with FAT file system and boot your RPi with it. Although the circuitry has pull-ups/pull-downs to not mess with the bus at boot time, I recommend to boot the RPi first and then turn on the C64. Reading the .CRT from SD card might take a second; the RPi is ready when the splash screen appears.
 
 The example programs have several configuration options (via #define), please see the source code. They all enable HDMI output of the RPi -- the sound emulation will either output sound via PWM (head phone jack) or HDMI (where it also displays some simple oscilloscope views of the sound chips).
 
