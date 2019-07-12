@@ -27,14 +27,16 @@ __________               __________.___     _________                __
 
 */
 
+//#define USE_LATCH_FOR_GAMEEXROM
+
 // define this if you use a RaspberryPi 3B+
 #define TIMINGS_RPI3B_PLUS
 
 #include "kernel_cart.h"
 
 // setting EXROM and GAME (low = 0, high = 1)
-#define SET_EXROM	1
-#define SET_GAME	0
+#define SET_EXROM	0
+#define SET_GAME	1
 
 // cartridge memory window bROML or bROMH
 #define ROM_LH		bROML
@@ -42,6 +44,7 @@ __________               __________.___     _________                __
 // simply defines "const unsigned char cart[8192]", a binary dump of a 8k cartridge
 #include "Cartridges/cart_d020.h" //  ROML, EXROM closed
 //#include "Cartridges/cart_1541.h" //  ROML, EXROM closed
+//geht noch nicht, settings überprüfen:
 //#include "Cartridges/cart_deadtest.h" // ROMH, GAME closed 
 //#include "Cartridges/cart_diag41.h" // ROML, EXROM und GAME closed
 //#include "Cartridges/cart_64erdisc.h" //  ROML, EXROM closed
@@ -59,6 +62,8 @@ CLogger	*logger;
 boolean CKernel::Initialize( void )
 {
 	boolean bOK = TRUE;
+
+	m_CPUThrottle.SetSpeed( CPUSpeedMaximum );
 
 #ifdef USE_HDMI_VIDEO
 	if ( bOK ) bOK = m_Screen.Initialize();
@@ -93,13 +98,30 @@ boolean CKernel::Initialize( void )
 	splashScreen( raspi_cart_splash );
 	#endif
 
-	if ( SET_EXROM == 0 )
-		clrLatch( LATCH_EXROM ); else
-		setLatch( LATCH_EXROM ); 
-	if ( SET_GAME == 0 )
-		clrLatch( LATCH_GAME ); else
-		setLatch( LATCH_GAME ); 
-	outputLatch();
+		#ifdef USE_LATCH_FOR_GAMEEXROM
+		if ( SET_EXROM == 0 )
+			clrLatch( LATCH_EXROM ); else
+			setLatch( LATCH_EXROM ); 
+		if ( SET_GAME == 0 )
+			clrLatch( LATCH_GAME ); else
+			setLatch( LATCH_GAME ); 
+		outputLatch();
+		#else
+
+		u32 set = 0, clr = 0;
+
+		if ( SET_EXROM == 0 )
+			clr |= bEXROM; else
+			set |= bEXROM; 
+
+		if ( SET_GAME == 0 )
+			clr |= bGAME; else
+			set |= bGAME; 
+
+		write32( ARM_GPIO_GPSET0, set );
+		write32( ARM_GPIO_GPCLR0, clr ); 
+
+		#endif
 	#endif
 
 	// convert CBM80 rom into a cache optimized format
@@ -114,6 +136,21 @@ boolean CKernel::Initialize( void )
 	return bOK;
 }
 
+__attribute__( ( always_inline ) ) inline void warmCache()
+{
+	u8 *ptr = (u8*)&cart_cacheoptimized[ 0 ];
+	for ( register u32 i = 0; i < 8192 / 64; i++ )
+	{
+		CACHE_PRELOAD( ptr );
+		ptr += 64;
+	}
+}
+
+// instruction cache prefetching
+__attribute__( ( always_inline ) ) inline void prefetchI( const void *ptr )
+{
+	asm volatile( "pli [%0]\n" : : "r" ( ptr ) );
+}
 
 void CKernel::Run( void )
 {
@@ -121,16 +158,21 @@ void CKernel::Run( void )
 	m_InputPin.ConnectInterrupt( this->FIQHandler, this );
 	m_InputPin.EnableInterrupt( GPIOInterruptOnRisingEdge );
 
+	warmCache();
+
 	// wait forever
 	while ( true )
 	{
+		warmCache();
+		prefetchI( *((void**)this->FIQHandler) ); 
+		//asm volatile ("loop:");
 		asm volatile ("wfi");
+		//asm volatile ("B loop");
 	}
 
 	// and we'll never reach this...
 	m_InputPin.DisableInterrupt();
 }
-
 
 void CKernel::FIQHandler (void *pParam)
 {
@@ -138,17 +180,24 @@ void CKernel::FIQHandler (void *pParam)
 	register u32 g3;
 	register u32 D;
 
+	prefetchI( &&cachesetup ); 
+	prefetchI( &&romaccess ); 
+
 	BEGIN_CYCLE_COUNTER
+
+	// here's a really nasty trick:
+	// we switch the multiplexers to A8..12, but because of some external delay we read the signals before they switch :-P (relaxes timing)
+	write32( ARM_GPIO_GPSET0, 1 << DIR_CTRL_257 ); 
 
 	// get A0-A7 immediately -- caution: IO1, IO2, ... etc. are not yet valid (the PLA delay is very likely not yet over)
 	g2 = read32( ARM_GPIO_GPLEV0 );
 
 	// block wrong executions
 	if ( !( g2 & bPHI ) ) 
+	{
+		write32( ARM_GPIO_GPCLR0, 1 << DIR_CTRL_257 ); 
 		return;
-
-	// switch multiplexer to A8..12
-	write32( ARM_GPIO_GPSET0, 1 << DIR_CTRL_257 ); 
+	}
 
 	// we got the A0..A7 part of the address which we will access
 	// and preload this chunk of 32 bytes into the cache
@@ -157,6 +206,7 @@ void CKernel::FIQHandler (void *pParam)
 	// slightly slower version (only assuming A0-A7 map to consecutive GPIOs):
 	// u32 addr = ( ( g2 >> A0 ) & 255 ) << 5;
 	// slightly faster, but be careful: the following line assumes that A0 == 5 (!) -- then it matches to position where we want A0-A7 shifted to
+cachesetup:
 	register u32 addr = g2 & ( 255 << 5 );
 	CACHE_PRELOAD( &cart_cacheoptimized[ addr ] );
 
@@ -171,6 +221,7 @@ void CKernel::FIQHandler (void *pParam)
 	#endif
 	g3 = read32( ARM_GPIO_GPLEV0 );
 
+romaccess:
 	if ( ( g3 & ROM_LH ) || !( g3 & bRW ) )
 	{
 		write32( ARM_GPIO_GPCLR0, 1 << DIR_CTRL_257 ); 
@@ -191,7 +242,7 @@ void CKernel::FIQHandler (void *pParam)
 	#ifndef TIMINGS_RPI3B_PLUS
 	WAIT_UP_TO_CYCLE( 600 );
 	#else
-	WAIT_UP_TO_CYCLE( 650 ); // 407: 700
+	WAIT_UP_TO_CYCLE( 725 ); 
 	#endif
 
 	// disable 74LVC245 

@@ -27,7 +27,7 @@
 #define _gpio_defs_h
 
 // GPIO List									IC			GPIO name	comment
-//  0 = FREE												ID_SD		
+//  0 = EXROM												ID_SD		used to control EXROM, as the version via the latch is not yet stable enough
 //  1 =	latch OE											ID_SC		for tristating the latch, currently not used
 //  2 = RESET									245 #1		SDA
 //  3 = IO1										245 #1		SCL
@@ -42,7 +42,7 @@
 // 12 = A7 (+ A12)								257 #1
 // 13 = CS										245 #1
 // 14 = GPIO_OE												TXD0		(OE for D0-D7 LVC245 Levelshifter, direction controlled via C64-R/W)
-// 15 = FREE												RXD0		
+// 15 = GAME												RXD0		used to control GAME, as the version via the latch is not yet stable enough
 // 16 = latch LE (LATCH_CONTROL)
 // 17 = PHI2									245 #1
 // 18 = control multiplexers
@@ -55,6 +55,14 @@
 // 25 = D5										245 #2
 // 26 = D6										245 #2
 // 27 = D7										245 #2
+
+#define COMP		1
+#define bCOMP		(1<<COMP)
+
+#define EXROM		0
+#define GAME		15
+#define bEXROM		(1<<EXROM)
+#define bGAME		(1<<GAME)
 
 #define PHI2 		17
 #define RW			19

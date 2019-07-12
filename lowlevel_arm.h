@@ -46,6 +46,8 @@
 								} while ( (cc2-cc) < (wc) ); }
 
 #define CACHE_PRELOAD( ptr ) { asm volatile ("pld\t[%0]" :: "r" (ptr)); }
+#define CACHE_PRELOADW( ptr ) { asm volatile ("pldw\t[%0]" :: "r" (ptr)); }
+#define CACHE_PRELOADI( ptr ) { asm volatile ("pli\t[%0]" :: "r" (ptr)); }
 
 
 void initCycleCounter();

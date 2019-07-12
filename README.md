@@ -2,6 +2,8 @@
 
 RasPIC64 is a framework which enables a Raspberry Pi 3B/3B+ (RPi) to bidirectionally communicate on the bus of a Commodore 64. Example use cases of RasPIC64 are connecting the RPi to the expansion port where it can emulate a GeoRAM/NeoRAM-compatible memory expansion, a CBM80-cartridge, or run a Dual-SID plus FM emulation (the SID emulation would also work when connecting the RPi to the SID-socket on the board). But many more things are imaginable: emulating freezer cartridges, 80 column cards with HDMI video output, custom accelerators/coprocessors etc. 
 
+Update: I added an emulation of Easyflash and Magic Desk cartridges, reading .CRT files from SD card.
+
 # How does it work?
 
 On the hardware side connecting the C64 to the RPi requires level shifting to interface the 5V bus with the 3.3V GPIOs of the RPi. However, things get a bit more complicated: communication on the data lines needs to be bidirectional, the RPi needs to get hands off the bus when it's not its turn. And even worse, the number of GPIOs of a standard RPi 3B/3B+ is too low to simply connect all signals to GPIOs! For the aforementioned use cases where we need to read address lines A0-A12, IO1, IO2, ROML, ROMH, Phi2, Reset, SID-chipselect, R/W and read/write data lines D0-D7 (plus GPIOs for controlling the circuitry). This makes the use of level shifters and multiplexers necessary. Optionally we would also need to set GAME, EXROM and RESET, and, very important :-), drive a tiny OLED display.
@@ -17,6 +19,8 @@ I implemented the communication in a fast interrupt handler (FIQ) which handles 
 # Optional components
 
 As mentioned above I also wanted to be able to control GAME, EXROM etc. and connect a small display (OLED 1306) to the RPi. Already lacking GPIOs I found that using a latch to which one writes when the data lines (and the corresponding GPIOs) are detached from the C64's bus is a viable solution.
+
+Note, in the current implementations of the Cartridge- and EasyFlash-emulation I'm not using the latch to control GAME and EXROM. I had recurring issues with the latch which need to be resolved in the future.
 
 
 # Building
