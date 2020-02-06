@@ -1,3 +1,9 @@
+# Update
+
+**This project has been superseeded by [Sidekick64](https://github.com/frntc/Sidekick64).**
+
+Please follow this link, you'll find an update of RasPiC64 there.
+
 # RasPIC64
 
 RasPIC64 is a framework which enables a Raspberry Pi 3B/3B+ (RPi) to bidirectionally communicate on the bus of a Commodore 64. Example use cases of RasPIC64 are connecting the RPi to the expansion port where it can emulate a GeoRAM/NeoRAM-compatible memory expansion, a CBM80-cartridge, or run a Dual-SID plus FM emulation (the SID emulation would also work when connecting the RPi to the SID-socket on the board). But many more things are imaginable: emulating freezer cartridges, 80 column cards with HDMI video output, custom accelerators/coprocessors etc. 
